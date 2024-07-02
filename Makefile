@@ -8,13 +8,13 @@ GOLANGCI_LINT_VERSION ?= v1.56.2
 #? all: Build all packages and executables.
 all: compile build
 
-#? build: Build the api.
+#? build: Build the app.
 build:
 	@echo "Building..."
 	
 	@go build -o bin/main cmd/api/main.go
 
-#? clean: Run the api.
+#? clean: Run the app.
 run:
 	@go run cmd/api/main.go
 
