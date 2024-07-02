@@ -6,6 +6,7 @@
 .vscode
 dist
 Dockerfile
+Makefile
 *.yaml
 *.yml
 *.md

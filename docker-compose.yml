@@ -1,0 +1,25 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - IPFS_HOST=ipfs
+      - IPFS_PORT=5001
+      - PORT=8000
+    ports:
+      - 8000:8000
+    depends_on:
+      - ipfs
+  ipfs:
+    image: ipfs/kubo:latest
+    ports:
+      - 4001:4001
+      - 4001:4001/udp
+      - 5001:5001
+      - 8080:8080
+    volumes:
+      - ipfs-data:/data/ipfs
+
+volumes:
+  ipfs-data:
