@@ -12,11 +12,11 @@ all: compile build
 build:
 	@echo "Building..."
 	
-	@go build -o bin/main cmd/api/main.go
+	@go build -o bin/main cmd/app/main.go
 
 #? clean: Run the app.
 run:
-	@go run cmd/api/main.go
+	@go run cmd/app/main.go
 
 #? compile: Compile solidity contract.
 compile:
