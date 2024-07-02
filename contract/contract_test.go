@@ -78,7 +78,7 @@ func TestFileRegistry(t *testing.T) {
 		t.Fatalf("unable to create call opts: %s", err)
 	}
 
-	item, err := testRegistry.Items(callOpts, key)
+	item, err := testRegistry.Get(callOpts, key)
 	if err != nil {
 		t.Fatalf("should be able to retrieve item: %s", err)
 	}

@@ -2,7 +2,6 @@ package ipfs
 
 import (
 	"context"
-	"github.com/ipfs/boxo/path"
 	"github.com/ipfs/kubo/client/rpc"
 	"github.com/ipfs/kubo/core/coreiface/options"
 	"github.com/pyropy/registry/config"
@@ -30,19 +29,18 @@ func NewClient(cfg *config.Config) (*Client, error) {
 }
 
 // UploadFile uploads a file to IPFS and returns CID of the uploaded file
-func (c *Client) UploadFile(ctx context.Context, file io.Reader) (*path.ImmutablePath, error) {
+func (c *Client) UploadFile(ctx context.Context, file io.Reader) (string, error) {
 	block, err := c.node.Block().Put(ctx, file, getIPFSUploadSettings(c.cfg))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	p := block.Path()
-	return &p, nil
+	return block.Path().String(), nil
 }
 
 func getIPFSUploadSettings(cfg *config.Config) options.BlockPutOption {
 	return func(settings *options.BlockPutSettings) error {
-		settings.Pin = cfg.IpfsPin
+		settings.Pin = cfg.IpfsAutoPin
 		return nil
 	}
 }

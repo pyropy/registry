@@ -11,4 +11,8 @@ contract FileRegistry {
         items[filePath] = cid;
         emit ItemSet(filePath, cid);
     }
+
+    function get(string memory filePath) external view returns (string memory) {
+        return items[filePath];
+    }
 }

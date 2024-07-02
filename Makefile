@@ -18,20 +18,26 @@ build:
 run:
 	@go run cmd/app/main.go
 
-#? compile: Compile solidity contract.
+#? compile: Compile the solidity contract.
 compile:
 	@solc --bin --abi contract/src/FileRegistry.sol -o contract/abi --overwrite
 	@abigen --bin contract/abi/FileRegistry.bin --abi contract/abi/FileRegistry.abi --pkg contract --type FileRegistry --out contract/contract.go
+
+
+#? deploy: Deploy the solidity contract.
+deploy:
+	@go run cmd/deploy/main.go
 
 #? test: Run the tests.
 test:
 	@echo "Testing..."
 	@go test ./... -v
 
-#? clean: Remove all executables.
+#? clean: Remove all executables and keys.
 clean:
 	@echo "Cleaning..."
 	@rm -rf bin
+	@rm -rf datadir
 
 #? lint: Lint whole repository.
 lint: install-golangcilint
@@ -53,6 +59,14 @@ devtools-update:
 	brew update
 	brew list ethereum || brew upgrade ethereum
 	brew list solidity || brew upgrade solidity
+
+
+#? dev-keygen: Generate a new development key (WARNING! Do not use for production).
+dev-keygen:
+	@type "geth" 2> /dev/null || echo 'Please run `make devtools` to install the geth.' && exit 1
+	echo "123" > /tmp/password
+	geth account new  --lightkdf --datadir ./datadir --password /tmp/password
+	@echo "New key with password '123' generated and saved in ./datadir/keystore/..."
 
 
 #? help: Get more info on make commands.

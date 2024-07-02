@@ -10,3 +10,4 @@ Makefile
 *.yaml
 *.yml
 *.md
+datadir

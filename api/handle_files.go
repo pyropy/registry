@@ -21,10 +21,17 @@ func (h *FilesRouteHandler) RegisterRoutes(r *gin.RouterGroup) {
 }
 
 func (h *FilesRouteHandler) GetFileCID(c *gin.Context) {
-	resp := make(map[string]string)
-	resp["cid"] = "QmPK1s3pNYLi9ERiq3BDxKa4XosgWwFRQUydHUtz4YgpqB"
+	filePath := c.Query("filePath")
+	cid, err := h.registry.GetFileCid(c, filePath)
+	if err != nil {
+		wrapError(c, err)
+		return
 
-	c.JSON(http.StatusOK, resp)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"cid": cid,
+	})
 }
 
 func (h *FilesRouteHandler) UploadFile(c *gin.Context) {
