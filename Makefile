@@ -50,6 +50,7 @@ install-golangcilint:
 #? devtools: Install recommended developer tools.
 devtools:
 	brew update
+	brew list ipfs || brew install ipfs
 	brew list ethereum || brew install ethereum
 	brew list solidity || brew install solidity
 
@@ -57,6 +58,7 @@ devtools:
 #? devtools-update: Update recommended developer tools.
 devtools-update:
 	brew update
+	brew list ipfs || brew upgrade ipfs
 	brew list ethereum || brew upgrade ethereum
 	brew list solidity || brew upgrade solidity
 
