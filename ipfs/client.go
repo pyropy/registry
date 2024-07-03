@@ -2,6 +2,7 @@ package ipfs
 
 import (
 	"context"
+	"github.com/ipfs/boxo/files"
 	"github.com/ipfs/kubo/client/rpc"
 	"github.com/ipfs/kubo/core/coreiface/options"
 	"github.com/pyropy/registry/config"
@@ -11,17 +12,6 @@ import (
 
 type Client interface {
 	UploadFile(ctx context.Context, file io.Reader) (string, error)
-}
-
-type SimulatedClient struct {
-}
-
-func NewSimulatedClient() *SimulatedClient {
-	return &SimulatedClient{}
-}
-
-func (c *SimulatedClient) UploadFile(_ context.Context, _ io.Reader) (string, error) {
-	return "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi", nil
 }
 
 // DialedClient is a thin wrapper around IPFS client
@@ -46,17 +36,29 @@ func NewDialedClient(cfg *config.Config) (*DialedClient, error) {
 
 // UploadFile uploads a file to IPFS and returns CID of the uploaded file
 func (c *DialedClient) UploadFile(ctx context.Context, file io.Reader) (string, error) {
-	block, err := c.node.Block().Put(ctx, file, getIPFSUploadSettings(c.cfg))
+	f := files.NewReaderFile(file)
+	path, err := c.node.Unixfs().Add(ctx, f, getIPFSUploadSettings(c.cfg))
 	if err != nil {
 		return "", err
 	}
 
-	return block.Path().RootCid().String(), nil
+	return path.RootCid().String(), nil
 }
 
-func getIPFSUploadSettings(cfg *config.Config) options.BlockPutOption {
-	return func(settings *options.BlockPutSettings) error {
+func getIPFSUploadSettings(cfg *config.Config) options.UnixfsAddOption {
+	return func(settings *options.UnixfsAddSettings) error {
 		settings.Pin = cfg.IpfsAutoPin
 		return nil
 	}
+}
+
+type MockClient struct {
+}
+
+func NewMockClient() *MockClient {
+	return &MockClient{}
+}
+
+func (c *MockClient) UploadFile(_ context.Context, _ io.Reader) (string, error) {
+	return "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi", nil
 }

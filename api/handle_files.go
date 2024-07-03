@@ -48,6 +48,8 @@ func (h *FilesRouteHandler) UploadFile(c *gin.Context) {
 		return
 	}
 
+	defer fileReader.Close()
+
 	cid, err := h.registry.UploadFile(c, filePath, fileReader)
 	if err != nil {
 		wrapError(c, err)

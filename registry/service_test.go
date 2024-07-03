@@ -47,11 +47,19 @@ func TestRegistry_UploadFile(t *testing.T) {
 		FileRegistryContractAddress: address,
 	}
 
-	ipfsClient := ipfs.NewSimulatedClient()
+	ipfsClient := ipfs.NewMockClient()
 	reg, err := registry.NewRegistry(cfg, ipfsClient, backend)
 	if err != nil {
 		t.Fatalf("unable to create registry: %s", err)
 	}
 
-	_, err = reg.UploadFile(nil, "test", nil)
+	want := "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi"
+	got, err := reg.UploadFile(ctx, "test", nil)
+	if err != nil {
+		t.Fatalf("unable to upload file: %s", err)
+	}
+
+	if got != want {
+		t.Fatalf("want %s, got %s", want, got)
+	}
 }

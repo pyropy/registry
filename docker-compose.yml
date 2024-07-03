@@ -14,6 +14,7 @@ services:
       target: app-runner
       dockerfile: Dockerfile
     environment:
+      GIN_MODE: ${GIN_MODE:-debug}
       HTTP_PORT: 8000
       IPFS_URL: http://ipfs:5001
       IPFS_AUTO_PIN: true
