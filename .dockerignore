@@ -4,10 +4,10 @@
 .github
 .idea
 .vscode
-dist
+bin
 Dockerfile
 Makefile
 *.yaml
 *.yml
 *.md
-datadir
+scripts

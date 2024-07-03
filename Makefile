@@ -20,7 +20,7 @@ run:
 
 #? compile: Compile the solidity contract.
 compile:
-	@solc --bin --abi contract/src/FileRegistry.sol -o contract/abi --overwrite
+	@solc --optimize --bin --abi contract/src/FileRegistry.sol -o contract/abi --overwrite
 	@abigen --bin contract/abi/FileRegistry.bin --abi contract/abi/FileRegistry.abi --pkg contract --type FileRegistry --out contract/contract.go
 
 
@@ -63,11 +63,7 @@ devtools-update:
 
 #? dev-keygen: Generate a new development key (WARNING! Do not use for production).
 dev-keygen:
-	@type "geth" 2> /dev/null || echo 'Please run `make devtools` to install the geth.' && exit 1
-	echo "123" > /tmp/password
-	geth account new  --lightkdf --datadir ./datadir --password /tmp/password
-	@echo "New key with password '123' generated and saved in ./datadir/keystore/..."
-
+	scripts/dev-keygen.sh
 
 #? help: Get more info on make commands.
 help: Makefile

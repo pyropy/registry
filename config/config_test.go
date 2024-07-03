@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/ethereum/go-ethereum/common"
 	"os"
 	"reflect"
 	"testing"
@@ -15,22 +16,31 @@ func TestLoadConfigFromEnv(t *testing.T) {
 		{
 			name: "default",
 			env:  map[string]string{},
-			want: DefaultConfig,
+			want: &Config{
+				Port:                        8000,
+				IpfsUrl:                     "http://localhost:5001",
+				IpfsAutoPin:                 true,
+				EthRpcUrl:                   "http://localhost:8545",
+				EthPrivateKey:               nil,
+				EthGasLimit:                 21000,
+				FileRegistryContractAddress: common.HexToAddress("0x"),
+			},
 		},
 		{
 			name: "custom",
 			env: map[string]string{
-				EnvPort:        "8000",
-				EnvIpfsPort:    "8081",
-				EnvIpfsHost:    "localhost",
-				EnvIpfsAutoPin: "false",
+				"HTTP_PORT":     "8080",
+				"IPFS_URL":      "http://localhost:8081",
+				"IPFS_AUTO_PIN": "false",
 			},
 			want: &Config{
-				Port:        8000,
-				IpfsPort:    "8081",
-				IpfsHost:    "localhost",
-				EthRpcUrl:   "http://localhost:8545",
-				IpfsAutoPin: false,
+				Port:                        8080,
+				IpfsUrl:                     "http://localhost:8081",
+				IpfsAutoPin:                 false,
+				EthRpcUrl:                   "http://localhost:8545",
+				EthPrivateKey:               nil,
+				EthGasLimit:                 21000,
+				FileRegistryContractAddress: common.HexToAddress("0x"),
 			},
 		},
 	}

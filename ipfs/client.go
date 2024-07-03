@@ -6,17 +6,16 @@ import (
 	"github.com/ipfs/kubo/core/coreiface/options"
 	"github.com/pyropy/registry/config"
 	"io"
-	"net"
 	"net/http"
 )
 
+// Client is a thin wrapper around IPFS client
 type Client struct {
 	cfg  *config.Config
 	node *rpc.HttpApi
 }
 
 func NewClient(cfg *config.Config) (*Client, error) {
-	url := net.JoinHostPort(cfg.IpfsHost, cfg.IpfsPort)
 	client := &http.Client{
 		Transport: &http.Transport{
 			Proxy:             http.ProxyFromEnvironment,
@@ -24,7 +23,7 @@ func NewClient(cfg *config.Config) (*Client, error) {
 		},
 	}
 
-	node, err := rpc.NewURLApiWithClient(url, client)
+	node, err := rpc.NewURLApiWithClient(cfg.IpfsUrl, client)
 	return &Client{cfg: cfg, node: node}, err
 }
 
@@ -35,7 +34,7 @@ func (c *Client) UploadFile(ctx context.Context, file io.Reader) (string, error)
 		return "", err
 	}
 
-	return block.Path().String(), nil
+	return block.Path().RootCid().String(), nil
 }
 
 func getIPFSUploadSettings(cfg *config.Config) options.BlockPutOption {

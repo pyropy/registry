@@ -59,8 +59,8 @@ func TestFileRegistry(t *testing.T) {
 		t.Fatalf("unable to create transaction opts for setitem: %s", err)
 	}
 
-	key := "/tmp/example.zip"
-	value := "QmPK1s3pNYLi9ERiq3BDxKa4XosgWwFRQUydHUtz4YgpqB"
+	key := "/tmp/example.jpg"
+	value := "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi"
 
 	tx, err = testRegistry.Save(tranOpts, key, value)
 	if err != nil {

@@ -7,15 +7,23 @@ RUN go mod download && go mod verify
 
 COPY . ./
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app cmd/app/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/app cmd/app/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/deploy cmd/deploy/main.go
 
-# Deploy the application binary into a lean image
-FROM alpine:3.20 AS runner
+FROM alpine:3.20 AS deploy-runner
 
 WORKDIR /
 
-COPY --from=build /api /api
+COPY --from=build /app/deploy /deploy
+
+ENTRYPOINT ["/deploy"]
+
+FROM alpine:3.20 AS app-runner
+
+WORKDIR /
+
+COPY --from=build /app/app /app
 
 EXPOSE 8000
 
-ENTRYPOINT ["/api"]
+ENTRYPOINT ["/app"]

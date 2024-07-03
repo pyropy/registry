@@ -2,22 +2,24 @@ package registry
 
 import (
 	"context"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"fmt"
 	"github.com/pyropy/eth"
 	"github.com/pyropy/registry/config"
 	"github.com/pyropy/registry/contract"
 	"github.com/pyropy/registry/ipfs"
+	"github.com/rs/zerolog/log"
 	"io"
-	"log"
 	"math/big"
 )
 
-// TODO: Add logging
 type Registry struct {
+	cfg              *config.Config
 	ipfsClient       *ipfs.Client
 	ethClient        *eth.Client
 	registryContract *contract.FileRegistry
 }
+
+var ZeroGwei = big.NewFloat(0.0)
 
 func NewRegistry(cfg *config.Config, backend eth.Backend) (*Registry, error) {
 	ipfsClient, err := ipfs.NewClient(cfg)
@@ -35,30 +37,35 @@ func NewRegistry(cfg *config.Config, backend eth.Backend) (*Registry, error) {
 		return nil, err
 	}
 
-	return &Registry{
+	r := Registry{
+		cfg:              cfg,
 		ipfsClient:       ipfsClient,
 		ethClient:        client,
 		registryContract: c,
-	}, nil
+	}
+
+	return &r, nil
 }
 
 func (r *Registry) UploadFile(ctx context.Context, filePath string, file io.Reader) (string, error) {
 	cid, err := r.ipfsClient.UploadFile(ctx, file)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to upload file to ipfs: %s", err)
 	}
 
-	txOpts, err := r.createTransactionOptions(ctx)
+	txOpts, err := r.ethClient.NewTransactOpts(ctx, r.cfg.EthGasLimit, nil, ZeroGwei)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to create tx options: %s", err)
 	}
 
 	tx, err := r.registryContract.Save(txOpts, filePath, cid)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to save cid: %s", err)
 	}
 
-	log.Println("tx hash: ", tx.Hash().Hex())
+	log.Ctx(ctx).Info().
+		Str("txHash", tx.Hash().Hex()).
+		Msg("transaction submitted")
 
 	return cid, nil
 }
@@ -70,15 +77,4 @@ func (r *Registry) GetFileCid(ctx context.Context, filePath string) (string, err
 	}
 
 	return r.registryContract.Get(callOpts, filePath)
-}
-
-func (r *Registry) createTransactionOptions(ctx context.Context) (*bind.TransactOpts, error) {
-	const gasLimit = 148416
-	valueGwei := big.NewFloat(0.0)
-	gasPrice, err := r.ethClient.SuggestGasPrice(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return r.ethClient.NewTransactOpts(ctx, gasLimit, gasPrice, valueGwei)
 }

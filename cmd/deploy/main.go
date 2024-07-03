@@ -2,51 +2,53 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/pyropy/eth"
-	"github.com/pyropy/eth/currency"
 	"github.com/pyropy/registry/config"
 	"github.com/pyropy/registry/contract"
+	"github.com/rs/zerolog/log"
 	"math/big"
 )
 
-// TODO: Add logging
+const DefaultDeployGasLimit = 6_000_000
+
 func main() {
+	ctx := context.Background()
 	cfg, err := config.LoadConfigFromEnv()
 	if err != nil {
-		panic(fmt.Sprintf("cannot get config from env: %s", err))
+		log.Fatal().Err(err).Msg("failed to load config from env")
 	}
 
 	if cfg.EthPrivateKey == nil {
-		panic("eth private key is required")
+		log.Fatal().Msg("private key is required")
 	}
 
-	backend, err := eth.CreateDialedBackend(context.Background(), cfg.EthRpcUrl)
+	backend, err := eth.CreateDialedBackend(ctx, cfg.EthRpcUrl)
 	if err != nil {
-		panic(fmt.Sprintf("cannot create backend: %s", err))
+		log.Fatal().Err(err).Msg("failed to create eth backend")
 	}
 
 	client, err := eth.NewClient(backend, cfg.EthPrivateKey)
 	if err != nil {
-		panic(fmt.Sprintf("cannot create eth client: %s", err))
+		log.Fatal().Err(err).Msg("failed to create eth client")
 	}
 
-	const gasLimit = 1600000
 	valueGwei := big.NewFloat(0.0)
-	gasPrice := currency.GWei2Wei(big.NewFloat(39.576))
-	txOpts, err := client.NewTransactOpts(context.Background(), gasLimit, gasPrice, valueGwei)
+	txOpts, err := client.NewTransactOpts(context.Background(), DefaultDeployGasLimit, nil, valueGwei)
 	if err != nil {
-		panic(fmt.Sprintf("unable to create transaction opts for deploy: %s", err))
+		log.Fatal().Err(err).Msg("unable to create transaction opts for deploy")
 	}
 
 	address, tx, _, err := contract.DeployFileRegistry(txOpts, client.Backend)
 	if err != nil {
-		panic(fmt.Sprintf("unable to deploy Registry: %s", err))
+		log.Fatal().Err(err).Msg("unable to deploy Registry")
 	}
 
 	if _, err := client.WaitMined(context.Background(), tx); err != nil {
-		panic(fmt.Sprintf("waiting for deploy: %s", err))
+		log.Fatal().Err(err).Msg("failed to get deployment tx")
 	}
 
-	fmt.Printf("deployed contract at address: %s\n", address)
+	log.Info().
+		Str("address", address.String()).
+		Msg("deployed contract")
+
 }

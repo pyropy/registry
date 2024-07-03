@@ -1,18 +1,4 @@
-# TODO: Add volume for app keys
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      - IPFS_HOST=ipfs
-      - IPFS_PORT=5001
-      - IPFS_AUTO_PIN=true
-      - PORT=8000
-    ports:
-      - 8000:8000
-    depends_on:
-      - ipfs
   ipfs:
     image: ipfs/kubo:latest
     ports:
@@ -22,6 +8,34 @@ services:
       - 8080:8080
     volumes:
       - ipfs-data:/data/ipfs
+  app:
+    build:
+      context: .
+      target: app-runner
+      dockerfile: Dockerfile
+    environment:
+      HTTP_PORT: 8000
+      IPFS_URL: http://ipfs:5001
+      IPFS_AUTO_PIN: true
+      ETH_RPC_URL: ${ETH_RPC_URL}
+      ETH_GAS_LIMIT: ${ETH_GAS_LIMIT:-21000}
+      ETH_PRIVATE_KEY_FILE: /run/secrets/eth_pk_file
+      ETH_PRIVATE_KEY_PASSWORD_FILE: /run/secrets/eth_pk_password_file
+      FILE_REGISTRY_CONTRACT_ADDRESS: ${FILE_REGISTRY_CONTRACT_ADDRESS}
+    secrets:
+      - eth_pk_file
+      - eth_pk_password_file
+    ports:
+      - 8000:8000
+    depends_on:
+      ipfs:
+        condition: service_started
 
 volumes:
   ipfs-data:
+
+secrets:
+  eth_pk_file:
+    file: /tmp/eth_pk_file
+  eth_pk_password_file:
+    file: /tmp/eth_pk_password
