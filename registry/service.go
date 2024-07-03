@@ -14,25 +14,20 @@ import (
 
 type Registry struct {
 	cfg              *config.Config
-	ipfsClient       *ipfs.Client
+	ipfsClient       ipfs.Client
 	ethClient        *eth.Client
 	registryContract *contract.FileRegistry
 }
 
 var ZeroGwei = big.NewFloat(0.0)
 
-func NewRegistry(cfg *config.Config, backend eth.Backend) (*Registry, error) {
-	ipfsClient, err := ipfs.NewClient(cfg)
+func NewRegistry(cfg *config.Config, ipfsClient ipfs.Client, backend eth.Backend) (*Registry, error) {
+	ethClient, err := eth.NewClient(backend, cfg.EthPrivateKey)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := eth.NewClient(backend, cfg.EthPrivateKey)
-	if err != nil {
-		return nil, err
-	}
-
-	c, err := contract.NewFileRegistry(cfg.FileRegistryContractAddress, client.Backend)
+	registryContract, err := contract.NewFileRegistry(cfg.FileRegistryContractAddress, backend)
 	if err != nil {
 		return nil, err
 	}
@@ -40,8 +35,8 @@ func NewRegistry(cfg *config.Config, backend eth.Backend) (*Registry, error) {
 	r := Registry{
 		cfg:              cfg,
 		ipfsClient:       ipfsClient,
-		ethClient:        client,
-		registryContract: c,
+		ethClient:        ethClient,
+		registryContract: registryContract,
 	}
 
 	return &r, nil
@@ -53,7 +48,12 @@ func (r *Registry) UploadFile(ctx context.Context, filePath string, file io.Read
 		return "", fmt.Errorf("failed to upload file to ipfs: %s", err)
 	}
 
-	txOpts, err := r.ethClient.NewTransactOpts(ctx, r.cfg.EthGasLimit, nil, ZeroGwei)
+	gasPrice, err := r.ethClient.SuggestGasPrice(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to suggest gas price: %s", err)
+	}
+
+	txOpts, err := r.ethClient.NewTransactOpts(ctx, r.cfg.EthGasLimit, gasPrice, ZeroGwei)
 	if err != nil {
 		return "", fmt.Errorf("failed to create tx options: %s", err)
 	}

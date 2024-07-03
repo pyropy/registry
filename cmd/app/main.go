@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/pyropy/eth"
 	"github.com/pyropy/registry/config"
+	"github.com/pyropy/registry/ipfs"
 	"github.com/pyropy/registry/registry"
 	"github.com/rs/zerolog/log"
 
@@ -21,12 +22,19 @@ func main() {
 		log.Fatal().Msg("private key is required")
 	}
 
+	ipfsClient, err := ipfs.NewDialedClient(cfg)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to create ipfs client")
+	}
+
 	backend, err := eth.CreateDialedBackend(ctx, cfg.EthRpcUrl)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create eth backend")
 	}
 
-	reg, err := registry.NewRegistry(cfg, backend)
+	defer backend.Close()
+
+	reg, err := registry.NewRegistry(cfg, ipfsClient, backend)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create registry servic")
 	}

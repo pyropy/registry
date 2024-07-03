@@ -9,13 +9,30 @@ import (
 	"net/http"
 )
 
-// Client is a thin wrapper around IPFS client
-type Client struct {
+type Client interface {
+	UploadFile(ctx context.Context, file io.Reader) (string, error)
+}
+
+type SimulatedClient struct {
+}
+
+func NewSimulatedClient() *SimulatedClient {
+	return &SimulatedClient{}
+}
+
+func (c *SimulatedClient) UploadFile(_ context.Context, _ io.Reader) (string, error) {
+	return "bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi", nil
+}
+
+// DialedClient is a thin wrapper around IPFS client
+type DialedClient struct {
 	cfg  *config.Config
 	node *rpc.HttpApi
 }
 
-func NewClient(cfg *config.Config) (*Client, error) {
+// NewDialedClient creates a new IPFS client
+// connected to the IPFS node specified in the config
+func NewDialedClient(cfg *config.Config) (*DialedClient, error) {
 	client := &http.Client{
 		Transport: &http.Transport{
 			Proxy:             http.ProxyFromEnvironment,
@@ -24,11 +41,11 @@ func NewClient(cfg *config.Config) (*Client, error) {
 	}
 
 	node, err := rpc.NewURLApiWithClient(cfg.IpfsUrl, client)
-	return &Client{cfg: cfg, node: node}, err
+	return &DialedClient{cfg: cfg, node: node}, err
 }
 
 // UploadFile uploads a file to IPFS and returns CID of the uploaded file
-func (c *Client) UploadFile(ctx context.Context, file io.Reader) (string, error) {
+func (c *DialedClient) UploadFile(ctx context.Context, file io.Reader) (string, error) {
 	block, err := c.node.Block().Put(ctx, file, getIPFSUploadSettings(c.cfg))
 	if err != nil {
 		return "", err

@@ -6,7 +6,6 @@ import (
 	"github.com/pyropy/registry/config"
 	"github.com/pyropy/registry/contract"
 	"github.com/rs/zerolog/log"
-	"math/big"
 )
 
 const DefaultDeployGasLimit = 6_000_000
@@ -32,19 +31,9 @@ func main() {
 		log.Fatal().Err(err).Msg("failed to create eth client")
 	}
 
-	valueGwei := big.NewFloat(0.0)
-	txOpts, err := client.NewTransactOpts(context.Background(), DefaultDeployGasLimit, nil, valueGwei)
+	address, _, err := contract.DeployContract(ctx, client, DefaultDeployGasLimit)
 	if err != nil {
-		log.Fatal().Err(err).Msg("unable to create transaction opts for deploy")
-	}
-
-	address, tx, _, err := contract.DeployFileRegistry(txOpts, client.Backend)
-	if err != nil {
-		log.Fatal().Err(err).Msg("unable to deploy Registry")
-	}
-
-	if _, err := client.WaitMined(context.Background(), tx); err != nil {
-		log.Fatal().Err(err).Msg("failed to get deployment tx")
+		log.Fatal().Err(err).Msg("failed to deploy contract")
 	}
 
 	log.Info().
